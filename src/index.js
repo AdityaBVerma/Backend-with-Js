@@ -5,23 +5,18 @@ dotenv.config({
 })
 
 connectDB()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.then(() => {
+    app.on("errror", (req, res) => {
+        console.log("ERRR:", error)
+        throw error
+    })
+    app.listen(process.env.PORT || 8000 , (req, res) => {
+        console.log(`₩₩ server is listening on port ${process.env.PORT}`)
+    })
+})
+.catch((error) => {
+    console.log("MONGODB connection error at index.js: ", error)
+})
 
 
 
