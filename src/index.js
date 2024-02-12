@@ -1,7 +1,8 @@
 import dotenv from "dotenv"
-import express from "express";
+// import express from "express";
 import connectDB from "./db/index.js";
-const app = express()
+import {app} from './app.js'
+// const app = express()
 
 dotenv.config({
     path : "./.env"
@@ -12,6 +13,9 @@ connectDB()
     app.on("errror", (req, res) => {
         console.log("ERRR:", error)
         throw error
+    })
+    app.get("/",(req, res) => {
+        res.send("hello")
     })
     app.listen(process.env.PORT || 8000 , (req, res) => {
         console.log(`₩₩ server is listening on port ${process.env.PORT}`)

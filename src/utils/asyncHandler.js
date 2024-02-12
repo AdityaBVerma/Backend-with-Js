@@ -1,12 +1,12 @@
 // ****** promise syntax a = () => { return () => {} }
 
-const asyncHandler = (reqHandler) =>{ 
+const asyncHandler = (requestHandler) => {
     return (req, res, next) => {
-    Promise.resolve(reqHandler(req, res, next)).catch((err) => next(err))// either catch or reject
+        Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err))
     }
 }
 
-export { asyncHandler }
+export default asyncHandler
 
 
 /*
