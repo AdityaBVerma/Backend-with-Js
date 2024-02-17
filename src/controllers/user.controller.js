@@ -144,7 +144,41 @@ const loginUser = asyncHandler(async (req, res) => {
     )
 })
 
+const logoutUser = asyncHandler(async(req, res) => {
+    // we need to delete the refreshToken in database and update it
+    /* const user = User.findById(userid)
+    
+        user.refreshToken = undefined
+        await user.save({validateBeforeSave: false})
+    */
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(201)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(200, {}, "Logged out User")
+    )
+})
+
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 }
