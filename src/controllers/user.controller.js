@@ -1,7 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js"
 import {ApiError} from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 
@@ -278,6 +278,10 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Avatar file is missing")
     }
 
+    const getuser = await User.findById(req.user?._id)
+
+    await deleteFromCloudinary(getuser.avatar)
+
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if (!avatar?.url) {
@@ -309,6 +313,10 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
     if (!coverImageLocalPath) {
         throw new ApiError(400, "cover image file is missing")
     }
+
+    const getuser = await User.findById(req.user?._id)
+
+    await deleteFromCloudinary(getuser.coverImage)
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
