@@ -374,7 +374,7 @@ const getUserChannelProfile = asyncHandler (async (req, res) => {
             }
         },
         {
-            addFields:{
+            $addFields:{
                 subscribersCount: {
                     $size: "$subscribers"
                 },
@@ -383,7 +383,7 @@ const getUserChannelProfile = asyncHandler (async (req, res) => {
                 },
                 isSubscribed: {
                     $cond: {
-                        if: {$in: [ req.user._id, "$subscribers.subscriber"]},
+                        if: {$in: [ req.user?._id, "$subscribers.subscriber"]},
                         then: true,
                         else: false
                     }
@@ -419,7 +419,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId(req.user?._id)// here we use mongoose.types.objectid as mongoose does not return the _id in aggregate but the entire string of the id
+                _id: mongoose.Types.ObjectId(req.user?._id)// here we use mongoose.types.objectid as req.user.id does not return the _id but the entire string of the id
             }
         },
         {
