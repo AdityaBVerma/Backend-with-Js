@@ -55,8 +55,10 @@ const registerUser = asyncHandler( async (req, res) => {
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     let coverImageLocalPath
+    let coverImage
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path
+        coverImage = await uploadOnCloudinary(coverImageLocalPath)
     }
 
     if (!avatarLocalPath) {
@@ -64,7 +66,7 @@ const registerUser = asyncHandler( async (req, res) => {
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
 
 
     if (!avatar) {
@@ -73,8 +75,8 @@ const registerUser = asyncHandler( async (req, res) => {
 
     const user = await User.create({
         fullName,
-        avatar:avatar.url,
-        coverImage:coverImage?.url || "",
+        avatar:{url:avatar.url, public_id:avatar.public_id},
+        coverImage:{url:coverImage?.url || "", public_id:coverImage.public_id},
         email,
         password,
         username: username.toLowerCase()
@@ -129,7 +131,7 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly : true,
         secure : true
     }
-
+console.log("yes")
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -138,7 +140,7 @@ const loginUser = asyncHandler(async (req, res) => {
         new ApiResponse(
             200,
             {
-                user: loggedInUser, accessToken, refreshToken 
+                user: loggedInUser, accessToken, refreshToken
             },
             "User logged in successfully"
         )
@@ -210,7 +212,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", newRefreshtoken, options)
         .json(
-            ApiResponse(
+            new ApiResponse(
                 200,
                 {
                     accessToken,
@@ -243,7 +245,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
-const getCurrentUser = asyncHandler(async (res,req) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(200, req.user, "User fetched successfully"))
@@ -281,7 +283,11 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
 
     const getuser = await User.findById(req.user?._id)
 
-    await deleteFromCloudinary(getuser.avatar)
+    const previousAvatar = getuser.avatar
+
+    if (previousAvatar.public_id) {
+        await deleteFromCloudinary(getuser.avatar.public_id)
+    }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -293,7 +299,7 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
         req.user?._id,
         {
             $set : {
-                avatar : avatar?.url
+                avatar : {url:avatar?.url, public_id:avatar.public_id}
             }
         },
         {
@@ -316,8 +322,10 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
     }
 
     const getuser = await User.findById(req.user?._id)
-
-    await deleteFromCloudinary(getuser.coverImage)
+    const previousCoverImage = getuser.coverImage
+    if (previousCoverImage) {
+        await deleteFromCloudinary(previousCoverImage.public_id)
+    }
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
@@ -329,7 +337,7 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
         req.user?._id,
         {
             $set : {
-                coverImage : coverImage?.url
+                coverImage :{url: coverImage?.url, public_id: coverImage.public_id}
             }
         },
         {
