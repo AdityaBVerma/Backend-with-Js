@@ -5,7 +5,7 @@ import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import asyncHandler from "../utils/asyncHandler.js"
-import {deleteFromCloudinary, uploadOnCloudinary} from "../utils/cloudinary.js"
+import {deleteFromCloudinary, uploadOnCloudinary, deleteVideoFromCloudinary} from "../utils/cloudinary.js"
 import { Like } from "../models/like.model.js"
 
 
@@ -52,7 +52,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
             [sortBy]: sortType
         };
     } else {
-        sortStage[$sort] = {
+        sortStage["$sort"] = {
             createdAt: -1
         }
     }
@@ -143,10 +143,11 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     const video = await Video.create({
         title,
+        discription: description,
         duration: videofile.duration,
         videofile : {url: videofile.url, public_id: videofile.public_id },
         thumbnail : {url: thumbnail.url, public_id: thumbnail.public_id },
-        duration : videofile.width,
+        duration : videofile.duration,
         owner: req.user?._id
     })
     return res.status(200).json(new ApiResponse(200, video, "video uploaded sucessfully"))
@@ -166,7 +167,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     const video = await Video.aggregate([
         {
             $match:{
-                _id: mongoose.Types.ObjectId(videoId)
+                _id: new mongoose.Types.ObjectId(videoId)
             }
         },
         {
@@ -249,7 +250,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         throw new ApiError(200, "you cannot perform this operation")
     }
 
-    const thumbnailLocalPath = req.files?.thumbnail[0]?.path
+    const thumbnailLocalPath = req.file?.path
     let thumbnail
     if (thumbnailLocalPath) {
         await deleteFromCloudinary(video.thumbnail.public_id)
@@ -259,11 +260,12 @@ const updateVideo = asyncHandler(async (req, res) => {
         video.title = title
     }
     if (description) {
-        video.description = description
+        video.discription = description
     }
     if (thumbnail) {
         video.thumbnail= {url: thumbnail.url, public_id: thumbnail.public_id}
     }
+    video.save({validateBeforesave: true})
     return res.status(200).json(
         new ApiResponse(200, video, "video details updated successfully")
     )
@@ -279,11 +281,13 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if(!video){
         throw new ApiError(400, "video not found");
     }
-    await deleteFromCloudinary(video.videoFile.public_id)
-    await deleteFromCloudinary(video.thumbnail.public_id)
+
     if(video.owner.toString()!== req.user._id.toString()){
         throw new ApiError(400, "you cannot perform this operation")
     }
+    await deleteVideoFromCloudinary(video.videofile.public_id)
+    await deleteFromCloudinary(video.thumbnail.public_id)
+
     const deletedVideo = await Video.findByIdAndDelete(videoId)
     if (deleteVideo) {
         Like.deleteMany({video: videoId})
