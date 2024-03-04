@@ -289,7 +289,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     await deleteFromCloudinary(video.thumbnail.public_id)
 
     const deletedVideo = await Video.findByIdAndDelete(videoId)
-    if (deleteVideo) {
+    if (deletedVideo) {
         Like.deleteMany({video: videoId})
         Comment.deleteMany({video: videoId})
     }
