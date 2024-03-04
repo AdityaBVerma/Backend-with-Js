@@ -3,7 +3,7 @@ import {Tweet} from "../models/tweet.model.js"
 import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import asyncHandler from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
@@ -64,7 +64,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
                     $first: "$owner"
                 },
                 likeCount: {
-                    $size: "like"
+                    $size: "$like"
                 }
             }
         }
@@ -120,11 +120,11 @@ const deleteTweet = asyncHandler(async (req, res) => {
     if (!tweet) {
         throw new ApiError(400, "Tweet not found")
     }
-    if (tweet.owner.toString() !== (req.body._id).toString()) {
+    if ((tweet.owner).toString() !== (req.user?._id).toString()) {
         throw new ApiError(400, "You cannot perform this action")
     }
     const deletedTweet = await Tweet.findByIdAndDelete(tweetId)
-    if (!deleteTweet) {
+    if (!deletedTweet) {
         throw new ApiError(400, "Couldn't delete tweet")
     }
     return res.status(200).json(new ApiResponse(200, {}, "Tweet deleted successfully"))
