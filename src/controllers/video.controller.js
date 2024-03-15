@@ -16,11 +16,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
         page,
         limit,
     }
-    const matchStage = {}
+    let matchStage = {}
     if (userId && isValidObjectId(userId)) {
         matchStage = {
             $match:{
-                owner: mongoose.Types.ObjectId(userId)
+                owner: new mongoose.Types.ObjectId(userId)
             }
         }
     } else if (query) {
@@ -38,7 +38,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     if (userId && query) {
         matchStage = {
             $match:{
-                owner : mongoose.Types.ObjectId(userId),
+                owner : new mongoose.Types.ObjectId(userId),
                 $or: [
                         {title: {$regex: query, $options: "i"}},
                         {description: {$regex: query, $options: "i"}},
@@ -46,7 +46,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
         }
     }
-    const sortStage = {}
+    let sortStage = {}
     if (sortBy && sortType) {
         sortStage["$sort"] = {
             [sortBy]: sortType
@@ -60,7 +60,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         matchStage,
         {
             $lookup: {
-                from : "owner",
+                from : "users",
                 localField: "owner",
                 foreignField: "_id",
                 as: "owner",

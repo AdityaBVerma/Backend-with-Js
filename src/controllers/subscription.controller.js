@@ -65,7 +65,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
             $addfields: {
                 $first: "$subscriber"
             }
-        }// project only subscriber so that we dont get channel in all docs 
+        }// you can project only subscriber so that we dont get channel in all docs 
     ])
     if (!subscribers.length) {
         throw new ApiError(400, "No documents found in subscribers")
