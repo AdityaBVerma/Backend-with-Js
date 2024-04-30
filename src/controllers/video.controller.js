@@ -105,7 +105,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         }
     ])
 
-    Video.aggregatePaginate(videos, options)
+    await Video.aggregatePaginate(videos, options)
     .then((result) => {
         return res.status(200).json(new ApiResponse(200, result, "fetched all videos successfully"))
     })
@@ -290,8 +290,8 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
     const deletedVideo = await Video.findByIdAndDelete(videoId)
     if (deletedVideo) {
-        Like.deleteMany({video: videoId})
-        Comment.deleteMany({video: videoId})
+        await Like.deleteMany({video: videoId})
+        await Comment.deleteMany({video: videoId})
     }
     return res.status(200).json(
         new ApiResponse(200, {}, "video deleted successfully")
